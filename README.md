@@ -26,7 +26,7 @@ SwiftUI und HealthKit, iOS 26 oder neuer, nur iPhone.
 
 Der Quellcode steht unter der [MIT-Lizenz](LICENSE): Du darfst ihn frei nutzen, verändern und weitergeben, solange der Copyright-Hinweis erhalten bleibt.
 
-**Ausgenommen** sind der Name „Workout Export“, das App-Icon und die Marke „Werkbank Apps“. Wenn du eine eigene App auf Basis dieses Codes veröffentlichst, gib ihr bitte einen eigenen Namen und ein eigenes Icon.
+**Ausgenommen** (siehe [TRADEMARKS.md](TRADEMARKS.md)) sind der Name „Workout Export“, das App-Icon und die Marke „Werkbank Apps“. Wenn du eine eigene App auf Basis dieses Codes veröffentlichst, gib ihr bitte einen eigenen Namen und ein eigenes Icon.
 
 © 2026 Christian Gerdes · Werkbank Apps
 
