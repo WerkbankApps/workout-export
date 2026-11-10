@@ -222,7 +222,9 @@ final class WorkoutExporter {
         let samples = WorkoutListItem.samples.filter { filter.activityTypes.isEmpty || filter.activityTypes.contains($0.activityType) }
         items = Array(samples.prefix(count))
         loadedFilter = filter
-        selectedIDs = Set(items.prefix(1).map(\.id))
+        // Launch argument `-demoSelectCount 3` preselects more workouts for screenshots.
+        let selectCount = max(1, UserDefaults.standard.integer(forKey: "demoSelectCount"))
+        selectedIDs = Set(items.prefix(selectCount).map(\.id))
         errorMessage = nil
         hasLoaded = true
     }

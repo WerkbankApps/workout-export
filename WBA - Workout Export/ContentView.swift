@@ -30,7 +30,8 @@ struct ContentView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                if !exporter.items.isEmpty {
+                // Hidden while the export sheet is open, so it doesn't shine through the glass.
+                if !exporter.items.isEmpty && !showExport {
                     exportBar
                 }
             }
@@ -42,11 +43,17 @@ struct ContentView: View {
                     .presentationDetents([.medium, .large])
             }
             .task {
+                #if DEBUG
+                applyScreenshotFilter()
+                #endif
                 if hasSeenIntro {
                     await reload()
                 } else {
                     showIntro = true
                 }
+                #if DEBUG
+                await applyScreenshotExport()
+                #endif
             }
             .onChange(of: filter) { Task { await reload() } }
             .onChange(of: workoutCount) { Task { await reload() } }
@@ -175,6 +182,23 @@ struct ContentView: View {
     private func reload() async {
         await exporter.loadList(count: workoutCount, filter: filter)
     }
+
+    #if DEBUG
+    // Launch arguments for App Store screenshots, e.g.
+    // -demoMode -hasSeenIntro YES -demoFilter Laufen -demoSelectCount 3 -demoShowExport YES
+    private func applyScreenshotFilter() {
+        if let name = UserDefaults.standard.string(forKey: "demoFilter"),
+           let option = WorkoutFilter(rawValue: name) {
+            filter = option
+        }
+    }
+
+    private func applyScreenshotExport() async {
+        guard UserDefaults.standard.bool(forKey: "demoShowExport") else { return }
+        try? await Task.sleep(for: .milliseconds(800))
+        showExport = true
+    }
+    #endif
 
     private func introDismissed() {
         hasSeenIntro = true

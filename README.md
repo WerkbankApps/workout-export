@@ -4,6 +4,12 @@
 
 Eine iPhone-App von **Werkbank Apps**, die ausgewählte Workouts aus Apple Health als kompakte JSON- oder CSV-Datei exportiert – ideal zur Analyse mit einer KI oder in einer Tabelle, ohne den kompletten Health-Export.
 
+<p>
+  <img src="Screenshots/iPhone%2018%20Pro%20Max/1-Workouts.png" width="200" alt="Workout-Liste">
+  <img src="Screenshots/iPhone%2018%20Pro%20Max/2-Dunkelmodus.png" width="200" alt="Dunkelmodus">
+  <img src="Screenshots/iPhone%2018%20Pro%20Max/3-Export.png" width="200" alt="Export">
+</p>
+
 ## Datenschutz
 
 - Die App **liest** Workouts und Messwerte aus Apple Health, schreibt aber nichts.
@@ -21,6 +27,8 @@ Der Quellcode ist Open Source, damit du das selbst nachprüfen kannst.
 ## Technik
 
 SwiftUI und HealthKit, iOS 26 oder neuer, nur iPhone.
+
+Die Screenshots entstehen mit Beispieldaten über `Scripts/make-screenshots.sh` (vorher in Xcode für den Simulator bauen).
 
 ## Lizenz
 
