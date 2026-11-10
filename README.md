@@ -10,7 +10,7 @@ Eine iPhone-App von **Werkbank Apps**, die ausgewählte Workouts aus Apple Healt
 - Es gibt **keine Server, keine Analyse- und keine Werbedienste**. Der Code enthält keinerlei Netzwerkzugriffe.
 - Daten verlassen das iPhone nur, wenn du eine Export-Datei selbst teilst.
 
-Dieser Quellcode ist öffentlich, damit du das selbst nachprüfen kannst.
+Der Quellcode ist Open Source, damit du das selbst nachprüfen kannst.
 
 ## Funktionen
 
@@ -22,10 +22,12 @@ Dieser Quellcode ist öffentlich, damit du das selbst nachprüfen kannst.
 
 SwiftUI und HealthKit, iOS 26 oder neuer, nur iPhone.
 
-## Rechtliches
+## Lizenz
 
-© 2026 Christian Gerdes · Werkbank Apps. Alle Rechte vorbehalten.
+Der Quellcode steht unter der [MIT-Lizenz](LICENSE): Du darfst ihn frei nutzen, verändern und weitergeben, solange der Copyright-Hinweis erhalten bleibt.
 
-Der Quellcode ist zur Einsicht veröffentlicht. Er steht **nicht** unter einer Open-Source-Lizenz: Kopieren, Verändern, Weitergeben oder die Veröffentlichung abgeleiteter Apps ist ohne schriftliche Erlaubnis nicht gestattet. Name, Icon und die Marke „Werkbank Apps“ sind davon in jedem Fall ausgenommen.
+**Ausgenommen** sind der Name „Workout Export“, das App-Icon und die Marke „Werkbank Apps“. Wenn du eine eigene App auf Basis dieses Codes veröffentlichst, gib ihr bitte einen eigenen Namen und ein eigenes Icon.
+
+© 2026 Christian Gerdes · Werkbank Apps
 
 Kontakt: [werkbankapps@icloud.com](mailto:werkbankapps@icloud.com) · [Datenschutz & Support](https://werkbankapps.github.io/workout-export/)
