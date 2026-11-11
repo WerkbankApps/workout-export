@@ -44,6 +44,7 @@
         "INFOPLIST_KEY_CFBundleDisplayName": "Workout Export",
         "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption": "NO",
         "INFOPLIST_KEY_NSHealthShareUsageDescription": "Die App liest deine Workouts und zugehörige Messwerte (z. B. Herzfrequenz, Distanz, Energie), um sie als Datei zu exportieren.",
+        "INFOPLIST_KEY_NSHealthUpdateUsageDescription": "Workout Export schreibt keine Daten in Health. Die App liest deine Workouts nur, um sie als Datei zu exportieren.",
         "INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]": "YES",
         "INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]": "YES",
         "INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]": "YES",
