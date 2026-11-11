@@ -36,7 +36,11 @@ shot() {
     xcrun simctl launch "$UDID" "$BUNDLE_ID" -demoMode "$@" >/dev/null
     sleep "${WAIT:-4}"
     xcrun simctl io "$UDID" screenshot --type=png "$OUT_DIR/$name.png" >/dev/null 2>&1
-    echo "✓ $name"
+    # App Store Connect rejects images with an alpha channel: flatten via JPEG and back to PNG.
+    sips -s format jpeg -s formatOptions 100 "$OUT_DIR/$name.png" --out "$OUT_DIR/$name.jpg" >/dev/null
+    sips -s format png "$OUT_DIR/$name.jpg" --out "$OUT_DIR/$name.png" >/dev/null
+    rm "$OUT_DIR/$name.jpg"
+    echo "✓ $name ($(sips -g pixelWidth -g pixelHeight "$OUT_DIR/$name.png" | awk '/pixel/{printf $2" "}'))"
 }
 
 shot "1-Workouts"     -hasSeenIntro YES -demoSelectCount 3
