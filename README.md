@@ -10,6 +10,8 @@ Eine iPhone-App von **Werkbank Apps**, die ausgewählte Workouts aus Apple Healt
   <img src="Screenshots/iPhone%2018%20Pro%20Max/3-Export.png" width="200" alt="Export">
 </p>
 
+[**Im App Store laden**](https://apps.apple.com/de/app/workout-export-werkbank-apps/id6833088138)
+
 ## Datenschutz
 
 - Die App **liest** Workouts und Messwerte aus Apple Health, schreibt aber nichts.
