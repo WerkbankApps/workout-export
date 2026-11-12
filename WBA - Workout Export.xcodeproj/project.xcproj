@@ -79,6 +79,7 @@
       "id": "15178C6A30A5AF2A00C1FE2D",
       "product": "Products/WorkoutExportTests.xctest",
       "product-type": "bundle.unit-test",
+      "dependencies": [ "WBA - Workout Export" ],
       "build-phases": [
         "compile-sources",
         "frameworks",
