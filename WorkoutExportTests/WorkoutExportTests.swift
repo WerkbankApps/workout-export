@@ -5,6 +5,9 @@ import Testing
 
 /// Simulates what the app sees for the different Health permission choices. HealthKit never reveals a
 /// denial to the app: denied access and "no data" both come back as an empty result.
+// HKWorkout(activityType:start:end:) is deprecated since iOS 17, but HKWorkoutBuilder (the replacement)
+// needs real Health authorization and a saved workout, so it can't create sample workouts in a unit test.
+// The test target therefore builds with SWIFT_SUPPRESS_WARNINGS = YES; the app target is unaffected.
 @MainActor
 struct HealthAccessScenarioTests {
 

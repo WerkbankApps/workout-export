@@ -79,7 +79,9 @@
       "id": "15178C6A30A5AF2A00C1FE2D",
       "product": "Products/WorkoutExportTests.xctest",
       "product-type": "bundle.unit-test",
-      "dependencies": [ "WBA - Workout Export" ],
+      "dependencies": [
+        "WBA - Workout Export",
+      ],
       "build-phases": [
         "compile-sources",
         "frameworks",
@@ -98,6 +100,7 @@
         "STRING_CATALOG_GENERATE_SYMBOLS": "NO",
         "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
         "SWIFT_EMIT_LOC_STRINGS": "NO",
+        "SWIFT_SUPPRESS_WARNINGS": "YES",
         "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
         "SWIFT_VERSION": "5.0",
         "TARGETED_DEVICE_FAMILY": "1,2",
