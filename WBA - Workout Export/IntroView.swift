@@ -51,6 +51,11 @@ struct IntroView: View {
                 text: "Statt des kompletten Health-Exports bekommst du eine kleine JSON- oder CSV-Datei, ideal zur Analyse mit einer KI oder in einer Tabelle."
             )
             IntroRow(
+                symbol: "heart.circle",
+                title: "Health-Zugriff freigeben",
+                text: "Gib gleich alles frei, was im Export enthalten sein soll – am besten alle Daten. Später änderst du das unter Einstellungen › Apps › Health › Datenzugriff & Geräte › Workout Export."
+            )
+            IntroRow(
                 symbol: "lock.circle",
                 title: "Deine Daten bleiben bei dir",
                 text: "Die App liest nur und sendet nichts an Server. Daten verlassen dein iPhone nur, wenn du sie selbst teilst."

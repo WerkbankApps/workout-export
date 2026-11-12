@@ -7,6 +7,7 @@ struct ContentView: View {
     @AppStorage("hasSeenIntro") private var hasSeenIntro = false
     @State private var showIntro = false
     @State private var showExport = false
+    @Environment(\.openURL) private var openURL
 
     private static let countOptions = [5, 10, 20, 50, 100]
 
@@ -108,10 +109,16 @@ struct ContentView: View {
                 ContentUnavailableView {
                     Label("Keine Workouts", systemImage: "figure.run")
                 } description: {
-                    Text(exporter.errorMessage ?? "Für diesen Filter wurden keine Workouts gefunden.")
+                    Text(exporter.errorMessage ?? HealthMessages.noWorkouts)
                 } actions: {
                     Button("Erneut laden") {
                         Task { await reload() }
+                    }
+                    .buttonStyle(.glassProminent)
+                    Button("Einstellungen öffnen") {
+                        if let url = URL(string: "app-settings:") {
+                            openURL(url)
+                        }
                     }
                     .buttonStyle(.glass)
                 }

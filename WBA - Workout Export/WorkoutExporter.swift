@@ -44,6 +44,9 @@ final class WorkoutExporter {
     var errorMessage: String?
 
     private let store = HKHealthStore()
+    private let injectedAccess: HealthAccess?
+    /// Shown in the export sheet when the exported workouts contain no measurements at all.
+    var exportNotice: String?
     private var workoutsByID: [UUID: HKWorkout] = [:]
     private var loadedFilter: WorkoutFilter = .all
     private var isDemo = false
@@ -94,6 +97,22 @@ final class WorkoutExporter {
         return types
     }
 
+    init(access: HealthAccess? = nil) {
+        injectedAccess = access
+    }
+
+    private var access: HealthAccess {
+        injectedAccess ?? HealthAccess(
+            isAvailable: { HKHealthStore.isHealthDataAvailable() },
+            requestAccess: { [store, readTypes] in
+                try await store.requestAuthorization(toShare: [], read: readTypes)
+            },
+            fetchWorkouts: { [self] count, filter in
+                try await fetchWorkouts(count: count, filter: filter)
+            }
+        )
+    }
+
     // MARK: - Public
 
     /// Loads the latest workouts for the selection list and preselects only the newest one.
@@ -105,8 +124,9 @@ final class WorkoutExporter {
         }
         #endif
 
-        guard HKHealthStore.isHealthDataAvailable() else {
-            errorMessage = "Health-Daten sind auf diesem Gerät nicht verfügbar."
+        let access = access
+        guard access.isAvailable() else {
+            errorMessage = HealthMessages.unavailable
             hasLoaded = true
             return
         }
@@ -118,15 +138,15 @@ final class WorkoutExporter {
         }
 
         do {
-            try await store.requestAuthorization(toShare: [], read: readTypes)
-            let workouts = try await fetchWorkouts(count: count, filter: filter)
+            try await access.requestAccess()
+            let workouts = try await access.fetchWorkouts(count, filter)
             workoutsByID = Dictionary(uniqueKeysWithValues: workouts.map { ($0.uuid, $0) })
             items = workouts.map(makeListItem)
             loadedFilter = filter
             selectedIDs = Set(items.prefix(1).map(\.id))
 
             if items.isEmpty {
-                errorMessage = "Keine Workouts gefunden. Prüfe in Einstellungen › Health › Datenzugriff, ob die App Workouts lesen darf."
+                errorMessage = HealthMessages.noWorkouts
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -147,6 +167,7 @@ final class WorkoutExporter {
         guard !selectedItems.isEmpty else { return }
         isExporting = true
         errorMessage = nil
+        exportNotice = nil
         defer { isExporting = false }
 
         do {
@@ -173,6 +194,7 @@ final class WorkoutExporter {
                 )
             )
             try writeFiles(records: records, context: context, filter: loadedFilter)
+            exportNotice = Self.missingMetricsNotice(for: records)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -180,12 +202,20 @@ final class WorkoutExporter {
 
     /// Discards the last export so it never gets out of sync with the current selection or options.
     func clearExport() {
+        exportNotice = nil
         jsonURL = nil
         csvURL = nil
         jsonString = nil
     }
 
     // MARK: - List display
+
+    /// A hint when none of the exported workouts has any measurement (typically: only the workouts
+    /// were shared in Health, but not heart rate, distance etc.).
+    static func missingMetricsNotice(for records: [WorkoutRecord]) -> String? {
+        guard !records.isEmpty, records.allSatisfy({ $0.metrics.isEmpty }) else { return nil }
+        return HealthMessages.noMetrics
+    }
 
     private func makeListItem(for workout: HKWorkout) -> WorkoutListItem {
         let summaries = metrics(from: workout.allStatistics)

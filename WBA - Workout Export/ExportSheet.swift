@@ -55,7 +55,10 @@ struct ExportSheet: View {
                 } header: {
                     Text("Teilen")
                 } footer: {
-                    if let jsonString = exporter.jsonString, !exporter.isExporting {
+                    if let notice = exporter.exportNotice, !exporter.isExporting {
+                        Label(notice, systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
+                    } else if let jsonString = exporter.jsonString, !exporter.isExporting {
                         Text("JSON-Datei: \(Int64(jsonString.utf8.count).formatted(.byteCount(style: .file)))")
                     }
                 }
