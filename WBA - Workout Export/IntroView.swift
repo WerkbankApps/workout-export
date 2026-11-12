@@ -65,7 +65,7 @@ struct IntroView: View {
     }
 }
 
-private struct IntroRow: View {
+struct IntroRow: View {
     let symbol: String
     let title: String
     let text: String

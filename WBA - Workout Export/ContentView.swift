@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var filter: WorkoutFilter = .all
     @AppStorage("hasSeenIntro") private var hasSeenIntro = false
     @State private var showIntro = false
+    @State private var showAccessHint = false
     @State private var showExport = false
     @Environment(\.openURL) private var openURL
 
@@ -38,6 +39,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showIntro, onDismiss: introDismissed) {
                 IntroView()
+            }
+            .sheet(isPresented: $showAccessHint, onDismiss: loadIfNeeded) {
+                AccessHintView()
             }
             .sheet(isPresented: $showExport) {
                 ExportSheet(exporter: exporter)
@@ -216,8 +220,19 @@ struct ContentView: View {
     }
     #endif
 
+    /// First launch: the access hint follows the welcome page and loading starts after it.
+    /// Later (info button): just make sure the list is loaded.
     private func introDismissed() {
+        let firstLaunch = !hasSeenIntro
         hasSeenIntro = true
+        if firstLaunch {
+            showAccessHint = true
+        } else {
+            loadIfNeeded()
+        }
+    }
+
+    private func loadIfNeeded() {
         if !exporter.hasLoaded {
             Task { await reload() }
         }
