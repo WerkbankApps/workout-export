@@ -5,8 +5,8 @@ import HealthKit
 /// Fills the Simulator's Health store with sample workouts, so the real HealthKit flow can be tested.
 /// Development only: it needs write access, which the shipping app never asks for.
 ///
-/// Launch arguments: `-seedHealth` replaces earlier test data with fresh samples,
-/// `-resetHealth` removes everything this app saved.
+/// Started by the "Testdaten erzeugen / entfernen (Simulator)" buttons in the empty state.
+/// `seed()` replaces earlier test data with fresh samples, `reset()` removes everything this app saved.
 enum HealthSeeder {
     private static let store = HKHealthStore()
 

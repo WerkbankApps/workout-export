@@ -85,9 +85,6 @@ struct ContentView: View {
                 #if DEBUG
                 applyScreenshotFilter()
                 #endif
-                #if DEBUG && targetEnvironment(simulator)
-                await applyHealthSeeding()
-                #endif
                 if hasSeenIntro {
                     await reload()
                 } else {
@@ -160,6 +157,14 @@ struct ContentView: View {
                         showAccessHelp = true
                     }
                     .buttonStyle(.glass)
+                    #if DEBUG && targetEnvironment(simulator)
+                    Button("Testdaten erzeugen (Simulator)") { runSeeder(remove: false) }
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
+                    Button("Testdaten entfernen (Simulator)") { runSeeder(remove: true) }
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
+                    #endif
                 }
                 .padding(.top, 40)
             }
@@ -230,13 +235,12 @@ struct ContentView: View {
     }
 
     #if DEBUG && targetEnvironment(simulator)
-    /// `-seedHealth` fills the Simulator's Health store with sample workouts, `-resetHealth` removes them again.
-    private func applyHealthSeeding() async {
-        let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-resetHealth") {
-            seedReport = await HealthSeeder.reset()
-        } else if arguments.contains("-seedHealth") {
-            seedReport = await HealthSeeder.seed()
+    /// Simulator only: fills Health with sample workouts, or removes them again. Started by a button, so the
+    /// Health permission sheet appears while the person is looking at the screen (it times out otherwise).
+    private func runSeeder(remove: Bool) {
+        Task {
+            seedReport = remove ? await HealthSeeder.reset() : await HealthSeeder.seed()
+            await reload()
         }
     }
     #endif
