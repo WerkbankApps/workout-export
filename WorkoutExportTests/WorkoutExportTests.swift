@@ -97,8 +97,8 @@ struct HealthAccessScenarioTests {
     @Test func hintMentionsWhereToChangeTheAccess() {
         let text = HealthMessages.noWorkouts
 
-        #expect(text.contains("Einstellungen"))
-        #expect(text.contains("Health"))
+        #expect(text.contains("Health-App"))
+        #expect(text.contains("Datenschutz"))
         #expect(text.contains("freigegeben") || text.contains("frei"))
     }
 

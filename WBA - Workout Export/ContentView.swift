@@ -115,10 +115,8 @@ struct ContentView: View {
                         Task { await reload() }
                     }
                     .buttonStyle(.glassProminent)
-                    Button("Einstellungen öffnen") {
-                        if let url = URL(string: "app-settings:") {
-                            openURL(url)
-                        }
+                    Button("Health öffnen") {
+                        openHealth()
                     }
                     .buttonStyle(.glass)
                 }
@@ -184,6 +182,17 @@ struct ContentView: View {
 
     private var allSelected: Bool {
         exporter.selectedIDs.count == exporter.items.count
+    }
+
+    /// Opens the Health app (unofficial but widely used URL scheme); falls back to the app's settings page.
+    private func openHealth() {
+        guard let health = URL(string: "x-apple-health://Sources/"),
+              let settings = URL(string: "app-settings:") else { return }
+        openURL(health) { accepted in
+            if !accepted {
+                openURL(settings)
+            }
+        }
     }
 
     private func reload() async {

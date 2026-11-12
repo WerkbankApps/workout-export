@@ -53,7 +53,7 @@ struct IntroView: View {
             IntroRow(
                 symbol: "heart.circle",
                 title: "Health-Zugriff freigeben",
-                text: "Gib gleich alles frei, was im Export enthalten sein soll – am besten alle Daten. Später änderst du das unter Einstellungen › Apps › Health › Datenzugriff & Geräte › Workout Export."
+                text: "Gib gleich alles frei, was im Export enthalten sein soll – am besten alle Daten. Später änderst du das in der Health-App unter Profilbild › Datenschutz › Apps › Workout Export."
             )
             IntroRow(
                 symbol: "lock.circle",
