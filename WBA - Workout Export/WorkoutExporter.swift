@@ -108,7 +108,9 @@ final class WorkoutExporter {
                 try await store.requestAuthorization(toShare: [], read: readTypes)
             },
             fetchWorkouts: { [self] count, filter in
-                try await fetchWorkouts(count: count, filter: filter)
+                try await fetchWorkouts(count: count, filter: filter).map {
+                    LoadedWorkout(item: makeListItem(for: $0), workout: $0)
+                }
             }
         )
     }
@@ -139,9 +141,11 @@ final class WorkoutExporter {
 
         do {
             try await access.requestAccess()
-            let workouts = try await access.fetchWorkouts(count, filter)
-            workoutsByID = Dictionary(uniqueKeysWithValues: workouts.map { ($0.uuid, $0) })
-            items = workouts.map(makeListItem)
+            let loaded = try await access.fetchWorkouts(count, filter)
+            workoutsByID = Dictionary(uniqueKeysWithValues: loaded.compactMap { entry in
+                entry.workout.map { (entry.item.id, $0) }
+            })
+            items = loaded.map(\.item)
             loadedFilter = filter
             selectedIDs = Set(items.prefix(1).map(\.id))
 

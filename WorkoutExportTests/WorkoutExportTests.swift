@@ -5,22 +5,23 @@ import Testing
 
 /// Simulates what the app sees for the different Health permission choices. HealthKit never reveals a
 /// denial to the app: denied access and "no data" both come back as an empty result.
-// HKWorkout(activityType:start:end:) is deprecated since iOS 17, but HKWorkoutBuilder (the replacement)
-// needs real Health authorization and a saved workout, so it can't create sample workouts in a unit test.
-// The test target therefore builds with SWIFT_SUPPRESS_WARNINGS = YES; the app target is unaffected.
 @MainActor
 struct HealthAccessScenarioTests {
 
     // MARK: - Helpers
 
-    private func workout(daysAgo: Int, type: HKWorkoutActivityType = .running) -> HKWorkout {
+    private func workout(daysAgo: Int, type: HKWorkoutActivityType = .running) -> LoadedWorkout {
         let start = Date.now.addingTimeInterval(-Double(daysAgo) * 86_400)
-        return HKWorkout(activityType: type, start: start, end: start.addingTimeInterval(1_800))
+        let item = WorkoutListItem(
+            id: UUID(), activityType: type, start: start, duration: 1_800,
+            distanceText: nil, averageHeartRate: nil, activeEnergy: nil, source: "Test"
+        )
+        return LoadedWorkout(item: item, workout: nil)
     }
 
     private func exporter(
         available: Bool = true,
-        workouts: [HKWorkout] = [],
+        workouts: [LoadedWorkout] = [],
         accessError: (any Error)? = nil
     ) -> WorkoutExporter {
         WorkoutExporter(access: HealthAccess(
@@ -106,7 +107,7 @@ struct HealthAccessScenarioTests {
     }
 
     @Test func emptyResultClearsOldList_andLaterReloadRecovers() async {
-        var available: [HKWorkout] = [workout(daysAgo: 0)]
+        var available: [LoadedWorkout] = [workout(daysAgo: 0)]
         let sut = WorkoutExporter(access: HealthAccess(
             isAvailable: { true },
             requestAccess: {},
@@ -132,7 +133,8 @@ struct HealthAccessScenarioTests {
     // MARK: - Workouts granted, but no measurements
 
     @Test func workoutsWithoutMeasurements_stillListWithoutNumbers() async {
-        // Only "Trainings" granted: the workout exists, but heart rate, distance etc. are hidden.
+        // Only "Trainings" granted: the workout exists, but heart rate, distance etc. are hidden
+        // (the list item then carries no numbers).
         let sut = exporter(workouts: [workout(daysAgo: 0)])
 
         await sut.loadList(count: 5, filter: .all)

@@ -4,7 +4,14 @@ import HealthKit
 struct HealthAccess {
     var isAvailable: () -> Bool
     var requestAccess: () async throws -> Void
-    var fetchWorkouts: (_ count: Int, _ filter: WorkoutFilter) async throws -> [HKWorkout]
+    var fetchWorkouts: (_ count: Int, _ filter: WorkoutFilter) async throws -> [LoadedWorkout]
+}
+
+/// A workout for the list. `workout` is the HealthKit object needed for the export; tests leave it `nil`
+/// so they don't have to create `HKWorkout` objects (their initializer is deprecated).
+struct LoadedWorkout {
+    let item: WorkoutListItem
+    let workout: HKWorkout?
 }
 
 /// User-facing texts for missing data. HealthKit never tells an app whether read access was denied
