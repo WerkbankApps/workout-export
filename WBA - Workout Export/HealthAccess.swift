@@ -14,12 +14,13 @@ enum HealthMessages {
 
     static let noWorkouts = """
         Keine Workouts gefunden. Entweder gibt es noch keine, oder der Zugriff ist nicht freigegeben. \
-        Gib in der Health-App unter Profilbild › Datenschutz › Apps › Workout Export alle Daten frei, \
-        die im Export enthalten sein sollen, und lade die Liste dann neu.
+        Gib unter Einstellungen › Apps › Health › Datenzugriff & Geräte › Workout Export alle Daten frei, \
+        die im Export enthalten sein sollen (mindestens „Trainings“), und lade die Liste dann neu. \
+        Alternativ: Health-App › Profilbild › Datenschutz › Apps › Workout Export.
         """
 
     static let noMetrics = """
         Keine Messwerte gefunden (z. B. Herzfrequenz oder Distanz). Entweder wurden sie nicht aufgezeichnet, \
-        oder der Zugriff ist nicht freigegeben: Health-App › Profilbild › Datenschutz › Apps › Workout Export.
+        oder der Zugriff ist nicht freigegeben: Einstellungen › Apps › Health › Datenzugriff & Geräte › Workout Export.
         """
 }

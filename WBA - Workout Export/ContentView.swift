@@ -7,8 +7,8 @@ struct ContentView: View {
     @AppStorage("hasSeenIntro") private var hasSeenIntro = false
     @State private var showIntro = false
     @State private var showAccessHint = false
+    @State private var showAccessHelp = false
     @State private var showExport = false
-    @Environment(\.openURL) private var openURL
 
     private static let countOptions = [5, 10, 20, 50, 100]
 
@@ -41,6 +41,9 @@ struct ContentView: View {
                 IntroView()
             }
             .sheet(isPresented: $showAccessHint, onDismiss: loadIfNeeded) {
+                AccessHintView(isFirstLaunch: true)
+            }
+            .sheet(isPresented: $showAccessHelp) {
                 AccessHintView()
             }
             .sheet(isPresented: $showExport) {
@@ -119,8 +122,8 @@ struct ContentView: View {
                         Task { await reload() }
                     }
                     .buttonStyle(.glassProminent)
-                    Button("Health öffnen") {
-                        openHealth()
+                    Button("Hinweise zum Health-Zugriff") {
+                        showAccessHelp = true
                     }
                     .buttonStyle(.glass)
                 }
@@ -186,17 +189,6 @@ struct ContentView: View {
 
     private var allSelected: Bool {
         exporter.selectedIDs.count == exporter.items.count
-    }
-
-    /// Opens the Health app (unofficial but widely used URL scheme); falls back to the app's settings page.
-    private func openHealth() {
-        guard let health = URL(string: "x-apple-health://Sources/"),
-              let settings = URL(string: "app-settings:") else { return }
-        openURL(health) { accepted in
-            if !accepted {
-                openURL(settings)
-            }
-        }
     }
 
     private func reload() async {
