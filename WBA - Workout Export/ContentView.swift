@@ -29,6 +29,15 @@ struct ContentView: View {
             .refreshable { await reload() }
             .navigationTitle("Workout Export")
             .toolbar {
+                #if DEBUG && targetEnvironment(simulator)
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu("Testdaten", systemImage: "wrench.and.screwdriver") {
+                        Button("Testdaten erzeugen", systemImage: "plus.circle") { runSeeder(remove: false) }
+                        Button("Testdaten entfernen", systemImage: "trash", role: .destructive) { runSeeder(remove: true) }
+                    }
+                    .tint(.orange)
+                }
+                #endif
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Info", systemImage: "info.circle") {
                         showIntro = true
@@ -157,14 +166,6 @@ struct ContentView: View {
                         showAccessHelp = true
                     }
                     .buttonStyle(.glass)
-                    #if DEBUG && targetEnvironment(simulator)
-                    Button("Testdaten erzeugen (Simulator)") { runSeeder(remove: false) }
-                        .buttonStyle(.bordered)
-                        .tint(.orange)
-                    Button("Testdaten entfernen (Simulator)") { runSeeder(remove: true) }
-                        .buttonStyle(.bordered)
-                        .tint(.orange)
-                    #endif
                 }
                 .padding(.top, 40)
             }
