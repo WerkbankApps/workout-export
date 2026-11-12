@@ -49,27 +49,68 @@ enum HealthSeeder {
 
     // MARK: - Public
 
-    /// Replaces earlier test data with fresh sample workouts.
-    static func seed() async throws {
-        try await store.requestAuthorization(toShare: shareTypes, read: shareTypes)
-        try await removeOwnData()
-        for sample in samples {
-            try await save(sample)
+    /// Replaces earlier test data with fresh sample workouts and returns a report of what happened.
+    static func seed() async -> String {
+        var lines: [String] = []
+        do {
+            try await store.requestAuthorization(toShare: shareTypes, read: shareTypes)
+            lines.append("Zugriff: Anfrage abgeschlossen")
+        } catch {
+            return "Testdaten FEHLER bei der Freigabe: \(error.localizedDescription)"
         }
+
+        do {
+            let removed = try await removeOwnData()
+            lines.append("Alte Testdaten entfernt: \(removed)")
+        } catch {
+            lines.append("Alte Testdaten entfernen FEHLER: \(error.localizedDescription)")
+        }
+
+        var saved = 0
+        for sample in samples {
+            do {
+                try await save(sample)
+                saved += 1
+            } catch {
+                lines.append("Speichern \(sample.type.rawValue) FEHLER: \(error.localizedDescription)")
+            }
+        }
+        lines.insert("\(saved) von \(samples.count) Testworkouts gespeichert", at: 0)
+        lines.append(await readBack())
+        return lines.joined(separator: "\n")
     }
 
-    /// Removes everything this app saved to Health.
-    static func reset() async throws {
-        try await store.requestAuthorization(toShare: shareTypes, read: shareTypes)
-        try await removeOwnData()
+    /// Removes everything this app saved to Health and returns a report.
+    static func reset() async -> String {
+        do {
+            try await store.requestAuthorization(toShare: shareTypes, read: shareTypes)
+            let removed = try await removeOwnData()
+            return "Testdaten entfernt: \(removed) Einträge\n" + (await readBack())
+        } catch {
+            return "Testdaten entfernen FEHLER: \(error.localizedDescription)"
+        }
     }
 
     // MARK: - Helpers
 
-    private static func removeOwnData() async throws {
+    /// Returns how many objects were deleted.
+    private static func removeOwnData() async throws -> Int {
         let ownData = HKQuery.predicateForObjects(from: HKSource.default())
+        var removed = 0
         for type in shareTypes {
-            _ = try await store.deleteObjects(of: type, predicate: ownData)
+            removed += try await store.deleteObjects(of: type, predicate: ownData)
+        }
+        return removed
+    }
+
+    /// Reads the workouts back, the same way the app does, to prove they are visible.
+    private static func readBack() async -> String {
+        do {
+            let descriptor = HKSampleQueryDescriptor(predicates: [.workout()], sortDescriptors: [], limit: nil)
+            let workouts = try await descriptor.result(for: store)
+            return "Aus Health lesbar: \(workouts.count) Workouts"
+        } catch {
+            return "Aus Health lesen FEHLER: \(error.localizedDescription)"
         }
     }
 

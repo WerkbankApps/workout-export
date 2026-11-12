@@ -10,6 +10,9 @@ struct ContentView: View {
     @State private var showAccessHelp = false
     @State private var showExport = false
     @State private var confirmation: String?
+    #if DEBUG && targetEnvironment(simulator)
+    @State private var seedReport: String?
+    #endif
 
     private static let countOptions = [5, 10, 20, 50, 100]
 
@@ -52,6 +55,19 @@ struct ContentView: View {
                 }
             }
             .sensoryFeedback(.success, trigger: confirmation)
+            #if DEBUG && targetEnvironment(simulator)
+            .overlay(alignment: .bottom) {
+                if let seedReport {
+                    Text(seedReport + "\n(Tippen zum Schließen)")
+                        .font(.caption.monospaced())
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.yellow.opacity(0.9), in: .rect(cornerRadius: 12))
+                        .padding()
+                        .onTapGesture { self.seedReport = nil }
+                }
+            }
+            #endif
             .sheet(isPresented: $showIntro, onDismiss: introDismissed) {
                 IntroView()
             }
@@ -217,14 +233,10 @@ struct ContentView: View {
     /// `-seedHealth` fills the Simulator's Health store with sample workouts, `-resetHealth` removes them again.
     private func applyHealthSeeding() async {
         let arguments = ProcessInfo.processInfo.arguments
-        do {
-            if arguments.contains("-resetHealth") {
-                try await HealthSeeder.reset()
-            } else if arguments.contains("-seedHealth") {
-                try await HealthSeeder.seed()
-            }
-        } catch {
-            exporter.errorMessage = "Testdaten: \(error.localizedDescription)"
+        if arguments.contains("-resetHealth") {
+            seedReport = await HealthSeeder.reset()
+        } else if arguments.contains("-seedHealth") {
+            seedReport = await HealthSeeder.seed()
         }
     }
     #endif
