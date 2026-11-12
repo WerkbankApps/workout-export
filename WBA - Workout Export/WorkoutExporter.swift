@@ -200,6 +200,11 @@ final class WorkoutExporter {
         }
     }
 
+    /// After a completed export: back to a clean selection, nothing marked.
+    func finishExport() {
+        selectedIDs = []
+    }
+
     /// Discards the last export so it never gets out of sync with the current selection or options.
     func clearExport() {
         exportNotice = nil

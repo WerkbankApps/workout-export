@@ -4,6 +4,9 @@ import UIKit
 /// Creates the export for the selected workouts and offers the ways to share it.
 struct ExportSheet: View {
     let exporter: WorkoutExporter
+    /// Called once the export is really done (shared or copied), with the text for the confirmation.
+    let onExported: (String) -> Void
+    @State private var shareItem: ShareItem?
     @AppStorage("includeHeartRateSeries") private var includeHeartRateSeries = true
     @State private var didCopy = false
     @Environment(\.dismiss) private var dismiss
@@ -28,23 +31,27 @@ struct ExportSheet: View {
                         }
                     } else if let jsonURL = exporter.jsonURL, let csvURL = exporter.csvURL {
                         Group {
-                            ShareLink(item: jsonURL) {
+                            Button {
+                                shareItem = ShareItem(url: jsonURL)
+                            } label: {
                                 ShareRow(title: "JSON teilen", subtitle: "Ideal für die KI-Analyse", symbol: "curlybraces")
                             }
-                            ShareLink(item: csvURL) {
+                            Button {
+                                shareItem = ShareItem(url: csvURL)
+                            } label: {
                                 ShareRow(title: "CSV teilen", subtitle: "Für Numbers oder Excel", symbol: "tablecells")
                             }
                             Button {
                                 UIPasteboard.general.string = exporter.jsonString
                                 didCopy = true
+                                onExported(ExportConfirmation.message(count: exporter.selectedIDs.count, copied: true))
                             } label: {
                                 ShareRow(
-                                    title: didCopy ? "Kopiert" : "JSON kopieren",
+                                    title: "JSON kopieren",
                                     subtitle: "Direkt in einen Chat einfügen",
-                                    symbol: didCopy ? "checkmark" : "doc.on.doc"
+                                    symbol: "doc.on.doc"
                                 )
                             }
-                            .sensoryFeedback(.success, trigger: didCopy)
                         }
                         // Neutral text color for the rows; the icons carry the green.
                         .tint(.primary)
@@ -71,6 +78,15 @@ struct ExportSheet: View {
                         dismiss()
                     }
                 }
+            }
+            .sheet(item: $shareItem) { item in
+                ActivityView(url: item.url) { completed in
+                    shareItem = nil
+                    if completed {
+                        onExported(ExportConfirmation.message(count: exporter.selectedIDs.count, copied: false))
+                    }
+                }
+                .presentationDetents([.medium, .large])
             }
             // Runs on appear and again whenever the option changes.
             .task(id: includeHeartRateSeries) {
@@ -114,6 +130,6 @@ private struct ShareRow: View {
 #Preview {
     let exporter = WorkoutExporter()
     exporter.loadDemo()
-    return ExportSheet(exporter: exporter)
+    return ExportSheet(exporter: exporter, onExported: { _ in })
 }
 #endif

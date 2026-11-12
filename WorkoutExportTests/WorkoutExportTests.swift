@@ -181,4 +181,28 @@ struct HealthAccessScenarioTests {
         #expect(sut.errorMessage == "Boom")
         #expect(!sut.isLoading)
     }
+
+    // MARK: - After an export
+
+    @Test func finishExport_clearsSelectionAndDiscardsTheExport() async {
+        let sut = exporter(workouts: [workout(daysAgo: 0), workout(daysAgo: 1), workout(daysAgo: 2)])
+        await sut.loadList(count: 5, filter: .all)
+        sut.selectedIDs = Set(sut.items.map(\.id))
+        #expect(sut.selectedIDs.count == 3)
+
+        sut.finishExport()
+
+        #expect(sut.selectedIDs.isEmpty)
+        #expect(sut.jsonURL == nil)
+        #expect(sut.csvURL == nil)
+        #expect(sut.jsonString == nil)
+        // The list itself stays, so the next export can start right away.
+        #expect(sut.items.count == 3)
+    }
+
+    @Test func confirmationMessage_namesCountAndAction() {
+        #expect(ExportConfirmation.message(count: 1, copied: false) == "1 Workout exportiert")
+        #expect(ExportConfirmation.message(count: 3, copied: false) == "3 Workouts exportiert")
+        #expect(ExportConfirmation.message(count: 2, copied: true) == "2 Workouts kopiert")
+    }
 }

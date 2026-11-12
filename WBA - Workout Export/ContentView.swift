@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var showAccessHint = false
     @State private var showAccessHelp = false
     @State private var showExport = false
+    @State private var confirmation: String?
 
     private static let countOptions = [5, 10, 20, 50, 100]
 
@@ -37,6 +38,20 @@ struct ContentView: View {
                     exportBar
                 }
             }
+            .overlay(alignment: .top) {
+                if let confirmation {
+                    Label(confirmation, systemImage: "checkmark.circle.fill")
+                        .font(.headline)
+                        .foregroundStyle(.green)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .glassEffect()
+                        .padding(.top, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .accessibilityAddTraits(.updatesFrequently)
+                }
+            }
+            .sensoryFeedback(.success, trigger: confirmation)
             .sheet(isPresented: $showIntro, onDismiss: introDismissed) {
                 IntroView()
             }
@@ -47,7 +62,7 @@ struct ContentView: View {
                 AccessHintView()
             }
             .sheet(isPresented: $showExport) {
-                ExportSheet(exporter: exporter)
+                ExportSheet(exporter: exporter, onExported: exportFinished)
                     .presentationDetents([.medium, .large])
             }
             .task {
@@ -221,6 +236,17 @@ struct ContentView: View {
             showAccessHint = true
         } else {
             loadIfNeeded()
+        }
+    }
+
+    /// Export done: close the sheet, clear the selection and confirm for a moment.
+    private func exportFinished(_ message: String) {
+        showExport = false
+        exporter.finishExport()
+        withAnimation(.snappy) { confirmation = message }
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            withAnimation(.snappy) { confirmation = nil }
         }
     }
 
