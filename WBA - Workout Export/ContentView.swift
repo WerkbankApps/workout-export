@@ -69,6 +69,9 @@ struct ContentView: View {
                 #if DEBUG
                 applyScreenshotFilter()
                 #endif
+                #if DEBUG && targetEnvironment(simulator)
+                await applyHealthSeeding()
+                #endif
                 if hasSeenIntro {
                     await reload()
                 } else {
@@ -209,6 +212,22 @@ struct ContentView: View {
     private func reload() async {
         await exporter.loadList(count: workoutCount, filter: filter)
     }
+
+    #if DEBUG && targetEnvironment(simulator)
+    /// `-seedHealth` fills the Simulator's Health store with sample workouts, `-resetHealth` removes them again.
+    private func applyHealthSeeding() async {
+        let arguments = ProcessInfo.processInfo.arguments
+        do {
+            if arguments.contains("-resetHealth") {
+                try await HealthSeeder.reset()
+            } else if arguments.contains("-seedHealth") {
+                try await HealthSeeder.seed()
+            }
+        } catch {
+            exporter.errorMessage = "Testdaten: \(error.localizedDescription)"
+        }
+    }
+    #endif
 
     #if DEBUG
     // Launch arguments for App Store screenshots, e.g.
