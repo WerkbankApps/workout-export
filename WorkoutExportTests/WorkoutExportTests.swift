@@ -211,3 +211,173 @@ struct HealthAccessScenarioTests {
         #expect(ExportConfirmation.message(count: 2, copied: true) == "2 Workouts kopiert")
     }
 }
+
+// MARK: - Welcome page at launch
+
+struct IntroPolicyTests {
+    @Test func firstLaunch_alwaysShowsTheIntro() {
+        #expect(IntroPolicy.showsAtLaunch(hasSeenIntro: false, showOnLaunch: true))
+        #expect(IntroPolicy.showsAtLaunch(hasSeenIntro: false, showOnLaunch: false))
+    }
+
+    @Test func laterLaunch_showsTheIntroWhileTheSwitchIsOn() {
+        #expect(IntroPolicy.showsAtLaunch(hasSeenIntro: true, showOnLaunch: true))
+    }
+
+    @Test func laterLaunch_skipsTheIntroWhenSwitchedOff() {
+        #expect(!IntroPolicy.showsAtLaunch(hasSeenIntro: true, showOnLaunch: false))
+    }
+}
+
+// MARK: - Export format
+
+/// The JSON and CSV files are what other tools (and AI chats) rely on, so their shape must not change by accident.
+@MainActor
+struct ExportFormatTests {
+
+    private func record(
+        activityType: String = "running",
+        metrics: [String: MetricSummary] = [:],
+        elevation: Double? = nil
+    ) -> WorkoutRecord {
+        WorkoutRecord(
+            id: UUID().uuidString, activityType: activityType,
+            start: .now, end: .now.addingTimeInterval(2_880), durationMinutes: 48, source: "Test",
+            indoor: nil, elevationAscendedMeters: elevation, temperatureCelsius: nil, humidityPercent: nil,
+            effortScore: nil, estimatedEffortScore: nil, metrics: metrics, activities: nil, heartRatePerMinute: nil
+        )
+    }
+
+    private func demoExporter() -> WorkoutExporter {
+        let sut = WorkoutExporter(access: HealthAccess(
+            isAvailable: { true }, requestAccess: {}, fetchWorkouts: { _, _ in [] }
+        ))
+        sut.loadDemo(count: 5, filter: .all)
+        return sut
+    }
+
+    // MARK: CSV
+
+    @Test func csv_startsWithTheDocumentedHeader() {
+        let lines = WorkoutExporter.csv(for: []).split(separator: "\n")
+
+        #expect(lines.count == 1)
+        #expect(lines.first == "start,end,activityType,durationMin,distanceKm,activeKcal,avgHeartRate,maxHeartRate,elevationAscendedM,effortScore,estimatedEffortScore")
+    }
+
+    @Test func csv_hasOneRowPerWorkout() {
+        let lines = WorkoutExporter.csv(for: [record(), record(), record()]).split(separator: "\n")
+
+        #expect(lines.count == 4)
+    }
+
+    @Test func csv_convertsDistanceToKilometersAndKeepsMetrics() {
+        let metrics = [
+            "distanceWalkingRunning": MetricSummary(unit: "m", total: 8_420),
+            "activeEnergy": MetricSummary(unit: "kcal", total: 612),
+            "heartRate": MetricSummary(unit: "bpm", average: 152, maximum: 171),
+        ]
+
+        let row = WorkoutExporter.csv(for: [record(metrics: metrics, elevation: 35)]).split(separator: "\n")[1]
+        let fields = row.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
+
+        #expect(fields.count == 11)
+        #expect(fields[2] == "running")
+        #expect(fields[3] == "48.0")
+        #expect(fields[4] == "8.42")
+        #expect(fields[5] == "612.0")
+        #expect(fields[6] == "152.0")
+        #expect(fields[7] == "171.0")
+        #expect(fields[8] == "35.0")
+    }
+
+    @Test func csv_leavesMissingValuesEmpty() {
+        let row = WorkoutExporter.csv(for: [record()]).split(separator: "\n")[1]
+        let fields = row.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
+
+        #expect(fields.count == 11)
+        let allEmpty = fields[4...].allSatisfy { $0.isEmpty }
+        #expect(allEmpty)
+    }
+
+    // MARK: JSON
+
+    @Test func json_hasTheDocumentedTopLevelStructure() async throws {
+        let sut = demoExporter()
+
+        await sut.exportSelected(includeHeartRateSeries: false)
+
+        let text = try #require(sut.jsonString)
+        let root = try #require(try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any])
+        for key in ["exportedAt", "timeZone", "filter", "notes", "context", "workouts"] {
+            #expect(root[key] != nil, "missing key \(key)")
+        }
+        let workouts = try #require(root["workouts"] as? [[String: Any]])
+        #expect(workouts.count == sut.selectedIDs.count)
+        let first = try #require(workouts.first)
+        for key in ["id", "activityType", "start", "end", "durationMinutes", "metrics"] {
+            #expect(first[key] != nil, "missing key \(key)")
+        }
+    }
+
+    @Test func json_writesDatesAsIso8601WithTime() async throws {
+        let sut = demoExporter()
+
+        await sut.exportSelected(includeHeartRateSeries: false)
+
+        let text = try #require(sut.jsonString)
+        let root = try #require(try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any])
+        let first = try #require((root["workouts"] as? [[String: Any]])?.first)
+        let start = try #require(first["start"] as? String)
+        #expect(start.contains("T"))
+        #expect(start.count >= 19)
+    }
+
+    @Test func export_onlyContainsTheSelectedWorkouts() async throws {
+        let sut = demoExporter()
+        sut.selectedIDs = Set(sut.items.prefix(2).map(\.id))
+
+        await sut.exportSelected(includeHeartRateSeries: false)
+
+        let text = try #require(sut.jsonString)
+        let root = try #require(try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any])
+        #expect((root["workouts"] as? [[String: Any]])?.count == 2)
+    }
+
+    @Test func export_writesBothFilesWithMatchingContent() async throws {
+        let sut = demoExporter()
+
+        await sut.exportSelected(includeHeartRateSeries: false)
+
+        let jsonURL = try #require(sut.jsonURL)
+        let csvURL = try #require(sut.csvURL)
+        #expect(jsonURL.pathExtension == "json")
+        #expect(csvURL.pathExtension == "csv")
+        let jsonFile = try String(contentsOf: jsonURL, encoding: .utf8)
+        let csvFile = try String(contentsOf: csvURL, encoding: .utf8)
+        #expect(jsonFile == sut.jsonString)
+        #expect(csvFile.hasPrefix("start,end,activityType"))
+    }
+
+    @Test func changingTheSelection_discardsTheExport() async throws {
+        let sut = demoExporter()
+        await sut.exportSelected(includeHeartRateSeries: false)
+        #expect(sut.jsonURL != nil)
+
+        sut.toggleSelection(sut.items[1].id)
+
+        #expect(sut.jsonURL == nil)
+        #expect(sut.csvURL == nil)
+        #expect(sut.jsonString == nil)
+    }
+
+    @Test func exportWithNothingSelected_createsNoFiles() async {
+        let sut = demoExporter()
+        sut.selectedIDs = []
+
+        await sut.exportSelected(includeHeartRateSeries: false)
+
+        #expect(sut.jsonURL == nil)
+        #expect(sut.jsonString == nil)
+    }
+}

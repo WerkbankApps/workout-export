@@ -20,10 +20,8 @@ enum HealthMessages {
     static let unavailable = "Health-Daten sind auf diesem Gerät nicht verfügbar."
 
     static let noWorkouts = """
-        Keine Workouts gefunden. Entweder gibt es noch keine, oder der Zugriff ist nicht freigegeben. \
-        Gib unter Einstellungen › Apps › Health › Datenzugriff & Geräte › Workout Export alle Daten frei, \
-        die im Export enthalten sein sollen (mindestens „Trainings“), und lade die Liste dann neu. \
-        Alternativ: Health-App › Profilbild › Datenschutz › Apps › Workout Export.
+        Keine Workouts gefunden. Entweder gibt es noch keine, oder „Trainings“ ist nicht freigegeben: \
+        Einstellungen › Apps › Health › Datenzugriff & Geräte › Workout Export. Danach neu laden.
         """
 
     static let noMetrics = """

@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var workoutCount = 5
     @State private var filter: WorkoutFilter = .all
     @AppStorage("hasSeenIntro") private var hasSeenIntro = false
+    @AppStorage("showIntroOnLaunch") private var showIntroOnLaunch = true
     @State private var showIntro = false
     @State private var showAccessHint = false
     @State private var showAccessHelp = false
@@ -94,10 +95,11 @@ struct ContentView: View {
                 #if DEBUG
                 applyScreenshotFilter()
                 #endif
-                if hasSeenIntro {
-                    await reload()
-                } else {
+                // The welcome page returns at every start unless switched off on the page itself.
+                if IntroPolicy.showsAtLaunch(hasSeenIntro: hasSeenIntro, showOnLaunch: showIntroOnLaunch) {
                     showIntro = true
+                } else {
+                    await reload()
                 }
                 #if DEBUG
                 await applyScreenshotExport()
@@ -126,6 +128,8 @@ struct ContentView: View {
                         .labelStyle(TrailingIconLabelStyle())
                 }
                 .buttonStyle(.glass)
+                .accessibilityLabel("Anzahl")
+                .accessibilityValue("Letzte \(workoutCount)")
 
                 Divider()
                     .frame(height: 24)
@@ -134,6 +138,7 @@ struct ContentView: View {
                     if option == filter {
                         Button(option.rawValue) { filter = option }
                             .buttonStyle(.glassProminent)
+                            .accessibilityAddTraits(.isSelected)
                     } else {
                         Button(option.rawValue) { filter = option }
                             .buttonStyle(.glass)
@@ -280,6 +285,8 @@ struct ContentView: View {
         showExport = false
         exporter.finishExport()
         withAnimation(.snappy) { confirmation = message }
+        // The banner is only visible for a moment, so VoiceOver gets the message spoken as well.
+        AccessibilityNotification.Announcement(message).post()
         Task {
             try? await Task.sleep(for: .seconds(2.5))
             withAnimation(.snappy) { confirmation = nil }
@@ -298,27 +305,38 @@ struct ContentView: View {
 private struct WorkoutCard: View {
     let item: WorkoutListItem
     let isSelected: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// The icon circle grows with the text size.
+    @ScaledMetric(relativeTo: .title3) private var iconSize = 48.0
 
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: item.activityType.symbolName)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 48, height: 48)
+                .frame(width: iconSize, height: iconSize)
                 .background(item.activityType.tint.gradient, in: .circle)
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline) {
+                // At accessibility sizes the date moves below the name instead of squeezing it.
+                let titleLayout = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                    : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 8))
+                titleLayout {
                     Text(item.activityType.displayName)
                         .font(.headline)
-                        .lineLimit(1)
-                    Spacer(minLength: 8)
+                    if !typeSize.isAccessibilitySize {
+                        Spacer(minLength: 0)
+                    }
                     Text(Self.dateText(for: item.start))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
 
-                HStack(spacing: 12) {
+                let statsLayout = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                    : AnyLayout(HStackLayout(spacing: 12))
+                statsLayout {
                     Label(Duration.seconds(item.duration).formatted(.time(pattern: .hourMinute)) + " h", systemImage: "clock")
                     if let distanceText = item.distanceText {
                         Label(distanceText, systemImage: "point.topleft.down.to.point.bottomright.curvepath")
@@ -334,14 +352,17 @@ private struct WorkoutCard: View {
 
                 Text(item.source)
                     .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
             }
 
             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                 .font(.title2)
-                .foregroundStyle(isSelected ? Color.green : Color(.tertiaryLabel))
+                .foregroundStyle(isSelected ? Color.green : Color(.systemGray))
                 .contentTransition(.symbolEffect(.replace))
         }
+        // One spoken sentence per card instead of loose fragments such as "152".
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spokenDescription)
         .padding(14)
         .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
         .overlay {
@@ -349,6 +370,23 @@ private struct WorkoutCard: View {
                 .strokeBorder(Color.green, lineWidth: isSelected ? 2 : 0)
         }
         .contentShape(.rect(cornerRadius: 22))
+    }
+
+    /// "Laufen, Heute, 07:32, Dauer 48 Minuten, Distanz 8,42 km, Puls 152, Quelle Apple Watch"
+    private var spokenDescription: String {
+        var parts = [
+            item.activityType.displayName,
+            Self.dateText(for: item.start),
+            "Dauer " + Duration.seconds(item.duration).formatted(.units(allowed: [.hours, .minutes], width: .wide)),
+        ]
+        if let distanceText = item.distanceText {
+            parts.append("Distanz \(distanceText)")
+        }
+        if let heartRate = item.averageHeartRate {
+            parts.append("Durchschnittspuls \(heartRate) Schläge pro Minute")
+        }
+        parts.append("Quelle \(item.source)")
+        return parts.joined(separator: ", ")
     }
 
     /// "Heute, 07:32", "Gestern, 18:10" or "Mo., 3. Nov., 08:05".

@@ -69,6 +69,12 @@ struct ExportSheet: View {
                         Text("JSON-Datei: \(Int64(jsonString.utf8.count).formatted(.byteCount(style: .file)))")
                     }
                 }
+
+                // A tip as plain list footer, so it scrolls with the content at large text sizes.
+                Section {
+                } footer: {
+                    Text("Tipp: Im Teilen-Fenster steht auch AirDrop (zum Mac). Klappt das Teilen mit deiner KI-App nicht wie gewünscht, nimm „JSON kopieren“ und füge den Text in den gewünschten Chat ein.")
+                }
             }
             .navigationTitle(titleText)
             .navigationBarTitleDisplayMode(.inline)
@@ -107,14 +113,16 @@ private struct ShareRow: View {
     let title: String
     let subtitle: String
     let symbol: String
+    @ScaledMetric(relativeTo: .body) private var iconSize = 36.0
 
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: symbol)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 36, height: 36)
+                .frame(width: iconSize, height: iconSize)
                 .background(Color.green.gradient, in: .rect(cornerRadius: 9))
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .foregroundStyle(.primary)
@@ -123,6 +131,7 @@ private struct ShareRow: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

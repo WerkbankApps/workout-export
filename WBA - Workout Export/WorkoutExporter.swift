@@ -437,7 +437,7 @@ final class WorkoutExporter {
     }
 
     /// One summary row per workout, for spreadsheets.
-    private static func csv(for records: [WorkoutRecord]) -> String {
+    static func csv(for records: [WorkoutRecord]) -> String {
         let header = "start,end,activityType,durationMin,distanceKm,activeKcal,avgHeartRate,maxHeartRate,elevationAscendedM,effortScore,estimatedEffortScore"
         let isoStyle = Date.ISO8601FormatStyle(timeZone: .current)
         let rows = records.map { record -> String in

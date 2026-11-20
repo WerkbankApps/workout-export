@@ -43,11 +43,11 @@ shot() {
     echo "✓ $name ($(sips -g pixelWidth -g pixelHeight "$OUT_DIR/$name.png" | awk '/pixel/{printf $2" "}'))"
 }
 
-shot "1-Workouts"     -hasSeenIntro YES -demoSelectCount 3
+shot "1-Workouts"     -hasSeenIntro YES -showIntroOnLaunch NO -demoSelectCount 3
 xcrun simctl ui "$UDID" appearance dark
-shot "2-Dunkelmodus"  -hasSeenIntro YES -demoSelectCount 2
+shot "2-Dunkelmodus"  -hasSeenIntro YES -showIntroOnLaunch NO -demoSelectCount 2
 xcrun simctl ui "$UDID" appearance light
-WAIT=6 shot "3-Export" -hasSeenIntro YES -demoSelectCount 3 -demoShowExport YES
+WAIT=6 shot "3-Export" -hasSeenIntro YES -showIntroOnLaunch NO -demoSelectCount 3 -demoShowExport YES
 shot "4-Willkommen"   -hasSeenIntro NO
 
 xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true

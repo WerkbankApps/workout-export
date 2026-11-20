@@ -3,6 +3,8 @@ import SwiftUI
 /// Short explanation shown on first launch and via the info button.
 struct IntroView: View {
     @Environment(\.dismiss) private var dismiss
+    /// Whether this page appears again at the next app start. On by default.
+    @AppStorage("showIntroOnLaunch") private var showOnLaunch = true
 
     var body: some View {
         // Scrolls on small screens or large text sizes instead of truncating.
@@ -12,9 +14,11 @@ struct IntroView: View {
                     .font(.system(size: 72))
                     .foregroundStyle(.green)
                     .padding(.top, 40)
+                    .accessibilityHidden(true)
 
                 Text("Willkommen bei Workout Export")
                     .font(.title.bold())
+                    .accessibilityAddTraits(.isHeader)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -24,15 +28,20 @@ struct IntroView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .safeAreaInset(edge: .bottom) {
-            Button {
-                dismiss()
-            } label: {
-                Text("Los geht’s")
-                    .frame(maxWidth: .infinity)
+            VStack(spacing: 12) {
+                Toggle("Beim nächsten Start wieder anzeigen", isOn: $showOnLaunch)
+                    .font(.subheadline)
+                    .tint(.green)
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Los geht’s")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(.green)
+                .controlSize(.large)
             }
-            .buttonStyle(.glassProminent)
-            .tint(.green)
-            .controlSize(.large)
             .padding(.horizontal, 32)
             .padding(.bottom)
         }
@@ -65,17 +74,28 @@ struct IntroView: View {
     }
 }
 
+/// Decides whether the welcome page opens at app start.
+enum IntroPolicy {
+    /// The first launch always shows it; later launches only while "Beim nächsten Start wieder anzeigen" is on.
+    static func showsAtLaunch(hasSeenIntro: Bool, showOnLaunch: Bool) -> Bool {
+        !hasSeenIntro || showOnLaunch
+    }
+}
+
 struct IntroRow: View {
     let symbol: String
     let title: String
     let text: String
+
+    @ScaledMetric(relativeTo: .title) private var iconWidth = 36.0
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             Image(systemName: symbol)
                 .font(.title)
                 .foregroundStyle(.green)
-                .frame(width: 36)
+                .frame(width: iconWidth)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
@@ -86,6 +106,7 @@ struct IntroRow: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

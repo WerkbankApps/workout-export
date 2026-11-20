@@ -16,11 +16,13 @@ struct AccessHintView: View {
                     .font(.system(size: 72))
                     .foregroundStyle(.pink)
                     .padding(.top, 40)
+                    .accessibilityHidden(true)
 
                 Text(isFirstLaunch ? "Gleich fragt Health nach deiner Erlaubnis" : "So klappt der Health-Zugriff")
                     .font(.title.bold())
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
 
                 VStack(alignment: .leading, spacing: 22) {
                     if isFirstLaunch {
