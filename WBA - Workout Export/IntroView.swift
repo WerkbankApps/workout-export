@@ -23,25 +23,26 @@ struct IntroView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 rows
+
+                // Part of the scrolling content, so it never covers the text above the button.
+                Toggle("Beim nächsten Start wieder anzeigen", isOn: $showOnLaunch)
+                    .font(.subheadline)
+                    .tint(.green)
+                    .padding(.horizontal)
             }
             .padding()
         }
         .scrollBounceBehavior(.basedOnSize)
         .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 12) {
-                Toggle("Beim nächsten Start wieder anzeigen", isOn: $showOnLaunch)
-                    .font(.subheadline)
-                    .tint(.green)
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Los geht’s")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.glassProminent)
-                .tint(.green)
-                .controlSize(.large)
+            Button {
+                dismiss()
+            } label: {
+                Text("Los geht’s")
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(.glassProminent)
+            .tint(.green)
+            .controlSize(.large)
             .padding(.horizontal, 32)
             .padding(.bottom)
         }

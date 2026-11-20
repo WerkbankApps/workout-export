@@ -42,13 +42,13 @@ struct ExportSheet: View {
                                 ShareRow(title: "CSV teilen", subtitle: "Für Numbers oder Excel", symbol: "tablecells")
                             }
                             Button {
-                                UIPasteboard.general.string = exporter.jsonString
+                                copyJSON(file: jsonURL, text: exporter.jsonString)
                                 didCopy = true
                                 onExported(ExportConfirmation.message(count: exporter.selectedIDs.count, copied: true))
                             } label: {
                                 ShareRow(
                                     title: "JSON kopieren",
-                                    subtitle: "Direkt in einen Chat einfügen",
+                                    subtitle: "Als Datei bzw. Text in einen Chat einfügen",
                                     symbol: "doc.on.doc"
                                 )
                             }
@@ -101,6 +101,19 @@ struct ExportSheet: View {
             }
         }
         .tint(.green)
+    }
+
+    /// Puts the JSON on the pasteboard as a file (with name) and as plain text. The target app takes
+    /// what it understands: a file becomes an attachment, otherwise the text is pasted.
+    private func copyJSON(file: URL, text: String?) {
+        if let provider = NSItemProvider(contentsOf: file) {
+            if let text {
+                provider.registerObject(text as NSString, visibility: .all)
+            }
+            UIPasteboard.general.itemProviders = [provider]
+        } else {
+            UIPasteboard.general.string = text
+        }
     }
 
     private var titleText: String {
